@@ -3,10 +3,14 @@ package com.example.novelcommunity
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import model.userModel
@@ -15,40 +19,36 @@ class UserDashboard : AppCompatActivity() {
 
     private lateinit var mAuth : FirebaseAuth
     private lateinit var mAuthStateListener : FirebaseAuth.AuthStateListener
+    private lateinit var toggle : ActionBarDrawerToggle
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        try {
-            this.supportActionBar!!.hide()
-            actionBar?.hide()
-        } catch (e: NullPointerException) {
-        }
         setContentView(R.layout.activity_user_dashboard)
 
         //Start of onCreate
-        //Logout Button
-        val button: Button = findViewById(R.id.logout_button)
+        var drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
+        var navView = findViewById<NavigationView>(R.id.navView)
+        toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        navView.setNavigationItemSelectedListener {
+            when(it.itemId){
+                R.id.redirect_settings -> {var settings:Intent = Intent(this,UserSettings::class.java)
+                startActivity(settings)}
 
-        button.setOnClickListener {
-            FirebaseAuth.getInstance().signOut()
-            val loginIntent = Intent(this, MainActivity::class.java)
-            startActivity(loginIntent)
+                R.id.logout_button -> {FirebaseAuth.getInstance().signOut()
+                    val loginIntent = Intent(this, MainActivity::class.java)
+                    startActivity(loginIntent) }
+            }
+            true
         }
 
         var genreAlert = findViewById<TextView>(R.id.genre_alert)
-        var settingsButton = findViewById<Button>(R.id.redirect_settings)
         genreAlert.setOnClickListener {
             var settings:Intent = Intent(this,UserSettings::class.java)
             startActivity(settings)
         }
-
-        settingsButton.setOnClickListener {
-            var settings:Intent = Intent(this,UserSettings::class.java)
-            startActivity(settings)
-        }
-
-
-
 
         //Async FirebaseDB calls
         val reference: DatabaseReference = FirebaseDatabase.getInstance().reference.child("Users").child(FirebaseAuth.getInstance().currentUser!!.uid.toString())
@@ -98,5 +98,12 @@ class UserDashboard : AppCompatActivity() {
 
         })
 
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(toggle.onOptionsItemSelected(item))
+            return true
+
+        return super.onOptionsItemSelected(item)
     }
 }

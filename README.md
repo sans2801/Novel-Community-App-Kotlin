@@ -1,1 +1,0 @@
-# Novel-Community-App-Kotlin
